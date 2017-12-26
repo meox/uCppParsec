@@ -192,7 +192,7 @@ namespace lparser
         return parse(sat([](char c){ return isalnum(c); }), inp);
     }
 
-
+/*
     // utils for seq
     template<typename T, typename Q>
     std::string plus(T a, Q b)
@@ -201,12 +201,12 @@ namespace lparser
         s << a << b;
         return s.str();
     }
-
+*/
 
     template<typename P, typename Q>
     decltype(auto) seq(P p, Q q)
     {
-        return [=](std::string inp) -> parser_t<std::string> {
+        return [=](std::string inp) {
             const auto a = parse(p, inp);
 
             if (a.is_empty())
@@ -250,7 +250,8 @@ namespace lparser
     decltype(auto) many(P p)
     {
         return [=](std::string inp) {
-            std::string c{};
+            using val_t = typename decltype(parse(p, ""))::value_t;
+            std::vector<val_t> acc;
 
             while (!inp.empty())
             {
@@ -258,14 +259,11 @@ namespace lparser
                 if (a.is_empty())
                     break;
 
-                c += a.get();
+                acc.push_back(a.get());
                 inp = a.remain;
             }
 
-            if (c.empty())
-                return empty<std::string>();
-            else
-                return parser_t<std::string>{c, inp};
+            return parser_t<std::vector<val_t>>{acc, inp};
         };
     }
 
