@@ -103,6 +103,8 @@ parser_t<long> expr(std::string inp)
 
 int main()
 {
+    std::cout << parse(many(space), "xyz") << std::endl;
+
     std::cout << parse(item, "") << std::endl;
     std::cout << parse(item, "3+5") << std::endl;
     std::cout << parse(item, "abc") << std::endl;

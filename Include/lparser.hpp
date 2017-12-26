@@ -7,30 +7,38 @@
 
 #include <string>
 
+
 namespace lparser
 {
 
     template<typename T>
-    struct parser_t {
+    struct parser_t
+    {
         using value_t = T;
 
-        parser_t() {
+        parser_t()
+        {
             first = nullptr;
             empty = true;
         }
 
         parser_t(T a, std::string r = "")
-                : remain(r) {
+        : remain(r)
+        {
             first = std::make_unique<T>(std::move(a));
             empty = false;
         }
 
-        parser_t(const parser_t &rhs) {
+        parser_t(const parser_t &rhs)
+        {
             empty = rhs.empty;
-            if (!empty) {
+            if (!empty)
+            {
                 remain = rhs.remain;
                 first = std::make_unique<T>(rhs.get());
-            } else {
+            }
+            else
+            {
                 remain = "";
             }
         }
@@ -53,10 +61,14 @@ namespace lparser
     parser_t<T> empty_fn(std::string) { return parser_t<T>{}; }
 
     template<typename Parser>
-    decltype(auto) parse(Parser p, std::string inp)
+    decltype(auto) parse(Parser && p, std::string inp)
     {
         return p(inp);
     }
+
+    template <typename T>
+    using parser_fun_t = std::function<parser_t<T>(std::string)>;
+
 
     template<typename G, typename P>
     decltype(auto) fmap(G g, P p)
@@ -73,6 +85,7 @@ namespace lparser
                 );
         };
     }
+
 
     template<typename T>
     decltype(auto) pure(T v)
@@ -249,7 +262,10 @@ namespace lparser
                 inp = a.remain;
             }
 
-            return parser_t<std::string>{c, inp};
+            if (c.empty())
+                return empty<std::string>();
+            else
+                return parser_t<std::string>{c, inp};
         };
     }
 
