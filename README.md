@@ -1,2 +1,2 @@
 # uCppParsec
-micro C++14 Parser Combinator Library
+µC++ Parser Combinator Library
