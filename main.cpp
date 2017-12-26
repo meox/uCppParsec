@@ -52,16 +52,16 @@ parser_t<long> term(std::string inp)
 
     const auto r = parse(
             pipe(
-                    seq(
-                            space,
-                            fmap([&](long s){a = s; return std::string{};}, factor),
-                            space,
-                            fmap([&](char c){op = c; return std::string{};}, pipe(char_eq('*'), char_eq('/'))),
-                            space,
-                            fmap([&](long s){b = s; return std::string{};}, term),
-                            space
-                    ),
-                    fmap([&](long s){a = s; return std::string{};}, factor)
+                seq(
+                    space,
+                    fmap([&](long s){a = s; return std::string{};}, factor),
+                    space,
+                    fmap([&](char c){op = c; return std::string{};}, pipe(char_eq('*'), char_eq('/'))),
+                    space,
+                    fmap([&](long s){b = s; return std::string{};}, term),
+                    space
+                ),
+                fmap([&](long s){a = s; return std::string{};}, factor)
             ),
             inp
     );
@@ -79,16 +79,16 @@ parser_t<long> expr(std::string inp)
 
     const auto r = parse(
             pipe(
-                    seq(
-                            space,
-                            fmap([&](long s){a = s; return std::string{};}, term),
-                            space,
-                            fmap([&](char c){op = c; return std::string{};}, pipe(char_eq('+'), char_eq('-'))),
-                            space,
-                            fmap([&](long s){b = s; return std::string{};}, expr),
-                            space
-                    ),
-                    fmap([&](long s_a){a = s_a; return std::string{};}, term)
+                seq(
+                    space,
+                    fmap([&](long s){a = s; return std::string{};}, term),
+                    space,
+                    fmap([&](char c){op = c; return std::string{};}, pipe(char_eq('+'), char_eq('-'))),
+                    space,
+                    fmap([&](long s){b = s; return std::string{};}, expr),
+                    space
+                ),
+                fmap([&](long s_a){a = s_a; return std::string{};}, term)
             ),
             inp
     );
