@@ -7,6 +7,8 @@
 
 #include <string>
 #include <tuple>
+#include <algorithm>
+#include <numeric>
 #include "omega.hpp"
 
 
@@ -268,10 +270,17 @@ namespace lparser
     }
 
 
-    decltype(auto) ident(std::string inp)
+    parser_t<std::string> ident(std::string inp)
     {
         return parse(
-                seq(lower, many(alphanum)),
+                parser_bind(
+                        seq(lower, many(alphanum)),
+                        [](auto x) {
+                            const auto& v_rest = std::get<1>(x);
+                            std::string rest = std::accumulate(std::begin(v_rest), std::end(v_rest), std::string{}, [](auto c, auto acc) { return c + acc; });
+                            return pure(std::string{std::get<0>(x)} + rest);
+                        }
+                ),
                 inp
         );
     }
@@ -294,10 +303,10 @@ namespace lparser
             const auto r = parse(
                     seq(
                             space,
-                            fmap([&value](auto v) {
+                            parser_bind(p, [&value](auto v) {
                                 value = v;
-                                return v;
-                            }, p),
+                                return pure(v);
+                            }),
                             space
                     ), inp
             );
@@ -331,9 +340,9 @@ namespace lparser
     {
         return parse(pipe(
                 nat,
-                fmap(
-                        [](std::string x) { return std::stol(x); },
-                        seq(char_eq('-'), nat)
+                parser_bind(
+                        seq(char_eq('-'), nat),
+                        [](auto x) { return pure(-std::get<1>(x)); }
                 )
         ), inp);
     }
@@ -374,22 +383,30 @@ std::ostream& operator<<(std::ostream& out, const lparser::parser_t<T>& p)
     return out;
 }
 
+
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::vector<T>>& v)
 {
-    out << "([";
-
-    bool f{false};
-    for (const auto& x : v.get())
+    if (v.is_empty())
     {
-        if (f)
-            out << ",";
-        else
-            f = true;
-        out << x;
+        out << "(< null > ; " << v.remain << ")";
     }
+    else
+    {
+        out << "([";
 
-    out << "] ; " << v.remain << ")";
+        bool f{false};
+        for (const auto& x : v.get())
+        {
+            if (f)
+                out << ",";
+            else
+                f = true;
+            out << x;
+        }
+
+        out << "] ; " << v.remain << ")";
+    }
     return out;
 }
 

@@ -117,20 +117,7 @@ int main()
     std::cout << parse(three_item, "ABCDE") << std::endl;
     std::cout << parse(item, "abc") << std::endl;
 
-    std::cout << parse(fmap([](char c){ return (char) ::toupper(c); }, item), "abc") << std::endl;
-
     std::cout << parse(pure(1), "abc") << std::endl;
-
-    auto f_g = [=](char x) {
-        return [=](char y){
-            return [=](char z){
-                return std::make_pair(x, z);
-            };
-        };
-    };
-
-    std::cout << parse(seq(pure(f_g), item, item, item), "abcdef") << std::endl;
-    std::cout << parse(seq(pure(f_g), item, item, item), "ab") << std::endl; //empty
 
     std::cout << parse(pipe(empty_fn<char>, item), "abc") << std::endl;
 
@@ -154,7 +141,7 @@ int main()
 
     std::cout << "intg " << parse(intg, "1235") << std::endl;
     std::cout << "intg " << parse(intg, "-1235   xxx") << std::endl;
-    std::cout << "integer " << parse(integer, "  -107     95") << std::endl;
+/*    std::cout << "integer " << parse(integer, "  -107     95") << std::endl;
 
     std::cout << "symbol " << parse(symbol("A"), " [ x ] ") << std::endl;
     std::cout << "symbol " << parse(symbol("x"), " x = 123 ") << std::endl;
@@ -175,6 +162,6 @@ int main()
                   << *b_expr.first
                   << ", not parsed: " << b_expr.remain
                   << std::endl;
-    }
+    }*/
     return 0;
 }
