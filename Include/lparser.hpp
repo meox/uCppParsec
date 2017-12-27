@@ -98,6 +98,7 @@ namespace lparser
         };
     }
 
+
     template<typename Pg, typename Px>
     decltype(auto) combine(Pg pg, Px px)
     {
@@ -105,19 +106,20 @@ namespace lparser
             const auto r = parse(pg, inp);
             using B_t = decltype(parse(fmap(r.get(), px), r.remain).get());
 
-            if (r.is_empty()) {
+            if (r.is_empty())
                 return empty<B_t>();
-            } else {
+            else
                 return parse(fmap(r.get(), px), r.remain);
-            }
         };
     }
+
 
     template<typename Pg, typename Px, typename A, typename ...Args>
     decltype(auto) combine(Pg pg, Px px, A a, Args ...args)
     {
         return combine(combine(pg, px), a, std::forward<Args>(args)...);
     }
+
 
     template<typename P, typename Q>
     decltype(auto) pipe(P p, Q q)
