@@ -70,7 +70,7 @@ namespace lparser
     template <typename T>
     using parser_fun_t = std::function<parser_t<T>(std::string)>;
 
-
+/*
     template<typename G, typename P>
     decltype(auto) fmap(G g, P p)
     {
@@ -86,7 +86,7 @@ namespace lparser
                 );
         };
     }
-
+*/
 
     template<typename T>
     decltype(auto) pure(T v)
@@ -110,24 +110,6 @@ namespace lparser
                 return empty<R_T>();
             return parse(f(a.get()), a.remain);
         };
-    }
-
-    template<typename P, typename Q>
-    decltype(auto) join()
-    {
-
-    };
-
-    template <typename T>
-    decltype(auto) gen_tuple(T x)
-    {
-        return std::make_tuple<T>(x);
-    }
-
-    template <typename ...Args>
-    decltype(auto) gen_tuple(std::tuple<Args...> x)
-    {
-        return x;
     }
 
 
@@ -227,37 +209,6 @@ namespace lparser
         return parse(sat([](char c){ return isalnum(c); }), inp);
     }
 
-/*
-    // utils for seq
-    template<typename T, typename Q>
-    std::string plus(T a, Q b)
-    {
-        std::stringstream s;
-        s << a << b;
-        return s.str();
-    }
-*/
-
-    /*template<typename P, typename Q>
-    decltype(auto) seq(P p, Q q)
-    {
-        return [=](std::string inp) {
-            const auto a = parse(p, inp);
-
-            if (a.is_empty())
-                return empty<std::string>();
-            else
-            {
-                const auto b = parse(q, a.remain);
-                if (b.is_empty())
-                    return empty<std::string>();
-                else
-                    return parser_t<std::string>{plus(a.get(), b.get()), b.remain};
-            }
-        };
-    }*/
-
-
     decltype(auto) string_eq(std::string x)
     {
         return [=](std::string inp) {
@@ -273,7 +224,7 @@ namespace lparser
         };
     }
 
-/*
+
     template<typename P>
     decltype(auto) many(P p)
     {
@@ -299,7 +250,21 @@ namespace lparser
     template<typename P>
     decltype(auto) some(P p)
     {
-        return seq(p, many(p));
+        return [=](std::string inp) {
+            auto a = parse(seq(p, many(p)), inp);
+            using VT = std::remove_reference_t<decltype(std::get<1>(a.get()))>;
+
+            if (a.is_empty())
+                return empty<VT>();
+            else
+            {
+                VT v;
+                v.push_back(std::get<0>(a.get()));
+                for (auto& e : std::get<1>(a.get()))
+                    v.push_back(e);
+                return parser_t<VT>(v, a.remain);
+            }
+        };
     }
 
 
@@ -345,13 +310,20 @@ namespace lparser
     }
 
 
-    decltype(auto) nat(std::string inp)
+    parser_t<long> nat(std::string inp)
     {
         const auto r = parse(some(digit), inp);
         if (r.is_empty())
             return empty<long>();
 
-        return parser_t<long>{std::stol(r.get()), r.remain};
+        long n{}, s = r.get().size();
+        for(char x : r.get())
+        {
+            auto d = (int)(x - '0');
+            n += (10 << (s--)) * d;
+        }
+
+        return parser_t<long>{n, r.remain};
     }
 
 
@@ -387,7 +359,6 @@ namespace lparser
             return parse(token(string_eq(x)), inp);
         };
     }
-*/
 }
 
 
@@ -428,7 +399,7 @@ std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::pair<T,
 {
     if (e.is_empty())
     {
-        out << "(< null > ; " << e.remain << ")\n";
+        out << "(< null > ; " << e.remain << ")";
         return out;
     }
     else
@@ -448,14 +419,14 @@ std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::tuple<A
 {
     if (e.is_empty())
     {
-        out << "(< null > ; " << e.remain << ")\n";
+        out << "(< null > ; " << e.remain << ")";
         return out;
     }
     else
     {
         out << "(";
         omega::show(std::cout, e.get());
-        out << " ; " << e.remain << ")\n";
+        out << " ; " << e.remain << ")";
     }
     return out;
 }

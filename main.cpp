@@ -115,9 +115,9 @@ int main()
     std::cout << parse(item, "") << std::endl;
     std::cout << parse(item, "3+5") << std::endl;
     std::cout << parse(three_item, "ABCDE") << std::endl;
-    //std::cout << parse(item, "abc") << std::endl;
+    std::cout << parse(item, "abc") << std::endl;
 
-    /*std::cout << parse(fmap([](char c){ return (char) ::toupper(c); }, item), "abc") << std::endl;
+    std::cout << parse(fmap([](char c){ return (char) ::toupper(c); }, item), "abc") << std::endl;
 
     std::cout << parse(pure(1), "abc") << std::endl;
 
@@ -129,8 +129,8 @@ int main()
         };
     };
 
-    std::cout << parse(combine(pure(f_g), item, item, item), "abcdef") << std::endl;
-    std::cout << parse(combine(pure(f_g), item, item, item), "ab") << std::endl; //empty
+    std::cout << parse(seq(pure(f_g), item, item, item), "abcdef") << std::endl;
+    std::cout << parse(seq(pure(f_g), item, item, item), "ab") << std::endl; //empty
 
     std::cout << parse(pipe(empty_fn<char>, item), "abc") << std::endl;
 
@@ -175,6 +175,6 @@ int main()
                   << *b_expr.first
                   << ", not parsed: " << b_expr.remain
                   << std::endl;
-    }*/
+    }
     return 0;
 }
