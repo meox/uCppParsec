@@ -6,6 +6,8 @@
 #define PARSER_LPARSER_H_H
 
 #include <string>
+#include <tuple>
+#include "omega.hpp"
 
 
 namespace lparser
@@ -116,13 +118,30 @@ namespace lparser
 
     };
 
+    template <typename T>
+    decltype(auto) gen_tuple(T x)
+    {
+        return std::make_tuple<T>(x);
+    }
+
+    template <typename ...Args>
+    decltype(auto) gen_tuple(std::tuple<Args...> x)
+    {
+        return x;
+    }
+
 
     template<typename P, typename Q>
-    decltype(auto) seq(P && p, Q && q)
+    decltype(auto) seq(P p, Q q)
     {
-        return parser_bind(p, [=](auto && x) {
-            return parser_bind(q, [=](auto && y) {
-                return pure(std::make_tuple(x, y));
+        return parser_bind(p, [q](auto x) {
+            return parser_bind(q, [=](auto y) {
+                return pure(
+                        std::tuple_cat(
+                                omega::as_tuple(x),
+                                omega::as_tuple(y)
+                        )
+                );
             });
         });
     }
@@ -131,15 +150,7 @@ namespace lparser
     template<typename P, typename Q, typename ...Args>
     decltype(auto) seq(P p, Q q, Args ...args)
     {
-        return seq(
-                p,
-                parser_bind(
-                        q,
-                        [=](auto x) {
-                            return
-                        }
-                )
-        );
+        return seq(p, seq(q, args...));
     }
 
 
@@ -427,6 +438,24 @@ std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::pair<T,
         out << ", ";
         out << e.get().second;
         out << "> ; " << e.remain << ")";
+    }
+    return out;
+}
+
+
+template <typename ...Args>
+std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::tuple<Args...>>& e)
+{
+    if (e.is_empty())
+    {
+        out << "(< null > ; " << e.remain << ")\n";
+        return out;
+    }
+    else
+    {
+        out << "(";
+        omega::show(std::cout, e.get());
+        out << " ; " << e.remain << ")\n";
     }
     return out;
 }
