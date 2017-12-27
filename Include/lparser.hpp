@@ -44,7 +44,6 @@ namespace lparser
         }
 
         bool is_empty() const { return empty; }
-
         T get() const { return *first; }
 
         std::unique_ptr<T> first;
@@ -91,33 +90,56 @@ namespace lparser
     decltype(auto) pure(T v)
     {
         return [=](std::string inp) {
-            return parser_t<T>(
-                    std::move(v),
-                    inp
-            );
+            return parser_t<T>(v, inp);
         };
     }
 
+    // bind is the fmap but I'll try to rewrite it from scratch following
+    // https://www.google.it/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiCrPvj8anYAhVQzqQKHUP9DrsQFggoMAA&url=http%3A%2F%2Fwww.cs.nott.ac.uk%2F~pszgmh%2Fmonparsing.pdf&usg=AOvVaw2FI6n5E7Y-BVTLTya889cy
 
-    template<typename Pg, typename Px>
-    decltype(auto) combine(Pg pg, Px px)
+    template<typename P, typename F>
+    decltype(auto) parser_bind(P p, F f)
     {
         return [=](std::string inp) {
-            const auto r = parse(pg, inp);
-            using B_t = decltype(parse(fmap(r.get(), px), r.remain).get());
+            auto a = parse(p, inp);
+            using R_T = typename decltype(parse(f(a.get()), a.remain))::value_t;
 
-            if (r.is_empty())
-                return empty<B_t>();
-            else
-                return parse(fmap(r.get(), px), r.remain);
+            if (a.is_empty())
+                return empty<R_T>();
+            return parse(f(a.get()), a.remain);
         };
     }
 
-
-    template<typename Pg, typename Px, typename A, typename ...Args>
-    decltype(auto) combine(Pg pg, Px px, A a, Args ...args)
+    template<typename P, typename Q>
+    decltype(auto) join()
     {
-        return combine(combine(pg, px), a, std::forward<Args>(args)...);
+
+    };
+
+
+    template<typename P, typename Q>
+    decltype(auto) seq(P && p, Q && q)
+    {
+        return parser_bind(p, [=](auto && x) {
+            return parser_bind(q, [=](auto && y) {
+                return pure(std::make_tuple(x, y));
+            });
+        });
+    }
+
+
+    template<typename P, typename Q, typename ...Args>
+    decltype(auto) seq(P p, Q q, Args ...args)
+    {
+        return seq(
+                p,
+                parser_bind(
+                        q,
+                        [=](auto x) {
+                            return
+                        }
+                )
+        );
     }
 
 
@@ -205,7 +227,7 @@ namespace lparser
     }
 */
 
-    template<typename P, typename Q>
+    /*template<typename P, typename Q>
     decltype(auto) seq(P p, Q q)
     {
         return [=](std::string inp) {
@@ -222,14 +244,7 @@ namespace lparser
                     return parser_t<std::string>{plus(a.get(), b.get()), b.remain};
             }
         };
-    }
-
-
-    template<typename P, typename Q, typename ...Args>
-    decltype(auto) seq(P p, Q q, Args ...args)
-    {
-        return seq(p, seq(q, std::forward<Args>(args)...));
-    }
+    }*/
 
 
     decltype(auto) string_eq(std::string x)
@@ -247,7 +262,7 @@ namespace lparser
         };
     }
 
-
+/*
     template<typename P>
     decltype(auto) many(P p)
     {
@@ -277,9 +292,12 @@ namespace lparser
     }
 
 
-    parser_t<std::string> ident(std::string inp)
+    decltype(auto) ident(std::string inp)
     {
-        return parse(seq(lower, many(alphanum)), inp);
+        return parse(
+                seq(lower, many(alphanum)),
+                inp
+        );
     }
 
 
@@ -315,6 +333,7 @@ namespace lparser
         };
     }
 
+
     decltype(auto) nat(std::string inp)
     {
         const auto r = parse(some(digit), inp);
@@ -323,6 +342,7 @@ namespace lparser
 
         return parser_t<long>{std::stol(r.get()), r.remain};
     }
+
 
     decltype(auto) intg(std::string inp)
     {
@@ -356,7 +376,7 @@ namespace lparser
             return parse(token(string_eq(x)), inp);
         };
     }
-
+*/
 }
 
 
@@ -390,6 +410,27 @@ std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::vector<
     out << "] ; " << v.remain << ")";
     return out;
 }
+
+
+template <typename T, typename R>
+std::ostream& operator<<(std::ostream& out, const lparser::parser_t<std::pair<T, R>>& e)
+{
+    if (e.is_empty())
+    {
+        out << "(< null > ; " << e.remain << ")\n";
+        return out;
+    }
+    else
+    {
+        out << "(<";
+        out << e.get().first;
+        out << ", ";
+        out << e.get().second;
+        out << "> ; " << e.remain << ")";
+    }
+    return out;
+}
+
 
 template <typename T, typename R>
 std::ostream& operator<<(std::ostream& out, const std::pair<T, R>& p)

@@ -16,7 +16,7 @@
 
 using namespace lparser;
 
-
+/*
 parser_t<long> expr(std::string inp);
 
 parser_t<long> factor(std::string inp)
@@ -99,17 +99,25 @@ parser_t<long> expr(std::string inp)
         return parser_t<long>((op == '+' ? a + b : a - b), r.remain);
 }
 
+*/
+
+
+decltype(auto) three_item(std::string inp)
+{
+    return parse(seq(item, item, item), inp);
+};
 
 
 int main()
 {
-    std::cout << parse(many(space), "xyz") << std::endl;
+    //std::cout << parse(many(space), "xyz") << std::endl;
 
     std::cout << parse(item, "") << std::endl;
     std::cout << parse(item, "3+5") << std::endl;
-    std::cout << parse(item, "abc") << std::endl;
+    std::cout << parse(three_item, "ABCDE") << std::endl;
+    //std::cout << parse(item, "abc") << std::endl;
 
-    std::cout << parse(fmap([](char c){ return (char) ::toupper(c); }, item), "abc") << std::endl;
+    /*std::cout << parse(fmap([](char c){ return (char) ::toupper(c); }, item), "abc") << std::endl;
 
     std::cout << parse(pure(1), "abc") << std::endl;
 
@@ -167,6 +175,6 @@ int main()
                   << *b_expr.first
                   << ", not parsed: " << b_expr.remain
                   << std::endl;
-    }
+    }*/
     return 0;
 }

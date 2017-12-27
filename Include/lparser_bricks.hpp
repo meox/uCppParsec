@@ -7,7 +7,7 @@
 
 #include "lparser.hpp"
 
-
+/*
 namespace lparser
 {
     template <typename T>
@@ -74,5 +74,5 @@ namespace lparser
         }
     }
 }
-
+*/
 #endif //PARSER_LPARSER_BRICKS_HPP_H
