@@ -68,9 +68,10 @@ int main()
     }
     else
     {
-        std::cout << "expr: " << expr_s << " = "
+        std::cout << "expr: <" << expr_s << "> = "
                   << *b_expr.first
                   << ", not parsed: " << b_expr.remain
+                  << ", correct value = " << ((5  * 7) + (31 - 9) + 21)
                   << std::endl;
     }
 
