@@ -2,6 +2,9 @@
 // a tiny tuple meta library
 // written by Gian Lorenzo Meocci <glmeocci@gmail.com>
 
+
+#pragma once
+
 #include <tuple>
 #include <utility>
 #include <type_traits>
@@ -199,6 +202,8 @@ namespace omega
         return make_reverse_list<S-1, 0>(std::forward<Tup>(tup));
     }
 
+
+    inline
     decltype(auto) reverse(std::tuple<>)
     {
         return std::make_tuple();
@@ -206,7 +211,7 @@ namespace omega
 
 
     template <class Tup>
-    decltype(auto) init(Tup&& tup)
+    inline decltype(auto) init(Tup&& tup)
     {
         return reverse(tail(reverse(std::forward<Tup>(tup))));
     }
@@ -215,7 +220,7 @@ namespace omega
     /* drop, take */
 
     template <int N, class Tup>
-    decltype(auto) drop(Tup&& tup)
+    inline decltype(auto) drop(Tup&& tup)
     {
         constexpr auto S = detail::_tuple_size<Tup>;
         static_assert(N <= S && S > 0, "");
@@ -223,8 +228,9 @@ namespace omega
         return make_list<N, S-1>(std::forward<Tup>(tup));
     }
 
+
     template <int N, class Tup>
-    decltype(auto) take(Tup&& tup)
+    inline decltype(auto) take(Tup&& tup)
     {
         constexpr auto S = detail::_tuple_size<Tup>;
         static_assert(N >= 0 && N <= S && S > 0, "");
@@ -236,7 +242,7 @@ namespace omega
     /* invoke function */
 
     template<typename Func, typename Tup>
-    decltype(auto) invoke(Func&& func, Tup&& tup)
+    inline decltype(auto) invoke(Func&& func, Tup&& tup)
     {
         constexpr auto S = detail::_tuple_size<Tup>;
         return detail::_invoke(std::forward<Func>(func),
@@ -248,7 +254,7 @@ namespace omega
     /* utility */
 
     template<typename T, std::size_t N, typename Indices = std::make_index_sequence<N>>
-    decltype(auto) array2tuple(const std::array<T, N>& a)
+    inline decltype(auto) array2tuple(const std::array<T, N>& a)
     {
         return detail::_array2tuple(a, Indices());
     }
@@ -256,7 +262,7 @@ namespace omega
     /* show tuple */
 
     template <typename Tup>
-    void show(std::ostream& out, Tup&& tup)
+    inline void show(std::ostream& out, Tup&& tup)
     {
         constexpr auto S = detail::_tuple_size<Tup>;
         out << "<";
@@ -264,14 +270,15 @@ namespace omega
         out << ">";
     }
 
-    void show(std::ostream& out, std::tuple<>)
+    inline void show(std::ostream& out, std::tuple<>)
     {
         out << "<>";
     }
 }
 
+
 template <typename T, typename ...Ts>
-std::ostream& operator<< (std::ostream& stream, const std::tuple<T, Ts...>& tup)
+inline std::ostream& operator<< (std::ostream& stream, const std::tuple<T, Ts...>& tup)
 {
     omega::show(stream, tup);
     return stream;

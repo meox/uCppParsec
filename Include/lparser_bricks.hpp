@@ -11,7 +11,7 @@
 namespace lparser
 {
     template <typename T>
-    decltype(auto) lists(T parser)
+    inline decltype(auto) lists(T parser)
     {
         using RT = typename decltype(parse(parser, ""))::value_t;
 
@@ -39,19 +39,19 @@ namespace lparser
         };
     }
 
-    decltype(auto) nats(std::string inp)
+    inline decltype(auto) nats(std::string inp)
     {
         return parse(lists(natural), inp);
     }
 
 
-    decltype(auto) strings(std::string inp)
+    inline decltype(auto) strings(std::string inp)
     {
         return parse(lists(alphanum), inp);
     }
 
 
-    decltype(auto) assign(std::string inp)
+    inline decltype(auto) assign(std::string inp)
     {
         std::string name, value;
 

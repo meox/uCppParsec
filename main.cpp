@@ -13,99 +13,10 @@
 #include <sstream>
 #include "Include/lparser.hpp"
 #include "Include/lparser_bricks.hpp"
+#include "examples/calculator.h"
 
 using namespace lparser;
 
-/*
-parser_t<long> expr(std::string inp);
-
-parser_t<long> factor(std::string inp)
-{
-    long a{};
-
-    const auto r = parse(
-            pipe(
-                seq(
-                    space,
-                    char_eq('('),
-                    space,
-                    fmap([&](long s){a = s; return std::string{};}, expr),
-                    space,
-                    char_eq(')'),
-                    space
-                ),
-                fmap([&](long s){a = s; return std::string{};}, nat)
-            ),
-            inp
-    );
-
-    if (r.is_empty())
-        return empty<long>();
-    else
-        return parser_t<long>(a, r.remain);
-}
-
-parser_t<long> term(std::string inp)
-{
-    char op;
-    long a{}, b{1};
-
-    const auto r = parse(
-            pipe(
-                seq(
-                    space,
-                    fmap([&](long s){a = s; return std::string{};}, factor),
-                    space,
-                    fmap([&](char c){op = c; return std::string{};}, pipe(char_eq('*'), char_eq('/'))),
-                    space,
-                    fmap([&](long s){b = s; return std::string{};}, term),
-                    space
-                ),
-                fmap([&](long s){a = s; return std::string{};}, factor)
-            ),
-            inp
-    );
-
-    if (r.is_empty())
-        return empty<long>();
-    else
-        return parser_t<long>((op == '*' ? a * b : a / b), r.remain);
-}
-
-parser_t<long> expr(std::string inp)
-{
-    char op;
-    long a{}, b{};
-
-    const auto r = parse(
-            pipe(
-                seq(
-                    space,
-                    fmap([&](long s){a = s; return std::string{};}, term),
-                    space,
-                    fmap([&](char c){op = c; return std::string{};}, pipe(char_eq('+'), char_eq('-'))),
-                    space,
-                    fmap([&](long s){b = s; return std::string{};}, expr),
-                    space
-                ),
-                fmap([&](long s_a){a = s_a; return std::string{};}, term)
-            ),
-            inp
-    );
-
-    if (r.is_empty())
-        return empty<long>();
-    else
-        return parser_t<long>((op == '+' ? a + b : a - b), r.remain);
-}
-
-*/
-
-
-decltype(auto) three_item(std::string inp)
-{
-    return parse(seq(item, item, item), inp);
-};
 
 
 int main()
@@ -114,7 +25,7 @@ int main()
 
     std::cout << parse(item, "") << std::endl;
     std::cout << parse(item, "3+5") << std::endl;
-    std::cout << parse(three_item, "ABCDE") << std::endl;
+    std::cout << parse(seq(item, item, item), "ABCDE") << std::endl;
     std::cout << parse(item, "abc") << std::endl;
 
     std::cout << parse(pure(1), "abc") << std::endl;
@@ -150,7 +61,7 @@ int main()
 
     std::cout << "nats " << parse(nats, "[5, 8, 1982, 3 ]") << std::endl;
 
-    /*const std::string expr_s = "((5  * 7) + (31 - 9) + 21);finish!";
+    const std::string expr_s = "((5  * 7) + (31 - 9) + 21);finish!";
     const auto b_expr = parse(expr, expr_s);
     if (b_expr.is_empty())
     {
@@ -162,7 +73,7 @@ int main()
                   << *b_expr.first
                   << ", not parsed: " << b_expr.remain
                   << std::endl;
-    }*/
+    }
 
     return 0;
 }

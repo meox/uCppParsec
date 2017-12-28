@@ -6,12 +6,15 @@
 #ifndef PARSER_LPARSER_H_H
 #define PARSER_LPARSER_H_H
 
+#include "omega.hpp"
 #include <string>
 #include <tuple>
 #include <algorithm>
 #include <numeric>
 #include <cmath>
-#include "omega.hpp"
+#include <memory>
+#include <vector>
+
 
 
 namespace lparser
@@ -74,26 +77,9 @@ namespace lparser
     template <typename T>
     using parser_fun_t = std::function<parser_t<T>(std::string)>;
 
-/*
-    template<typename G, typename P>
-    decltype(auto) fmap(G g, P p)
-    {
-        return [=](std::string inp) {
-            const auto a = parse(p, inp);
-            using B_t = decltype(g(a.get()));
-            if (a.is_empty())
-                return empty<B_t>();
-            else
-                return parser_t<B_t>(
-                        g(a.get()),
-                        a.remain
-                );
-        };
-    }
-*/
 
     template<typename T>
-    decltype(auto) pure(T v)
+    inline decltype(auto) pure(T v)
     {
         return [=](std::string inp) {
             return parser_t<T>(v, inp);
@@ -102,7 +88,7 @@ namespace lparser
 
 
     template<typename P, typename F>
-    decltype(auto) parser_bind(P p, F f)
+    inline decltype(auto) parser_bind(P p, F f)
     {
         return [=](std::string inp) {
             auto a = parse(p, inp);
@@ -116,7 +102,7 @@ namespace lparser
 
 
     template<typename P, typename Q>
-    decltype(auto) seq(P p, Q q)
+    inline decltype(auto) seq(P p, Q q)
     {
         return parser_bind(p, [q](auto x) {
             return parser_bind(q, [=](auto y) {
@@ -132,14 +118,14 @@ namespace lparser
 
 
     template<typename P, typename Q, typename ...Args>
-    decltype(auto) seq(P p, Q q, Args ...args)
+    inline decltype(auto) seq(P p, Q q, Args ...args)
     {
         return seq(p, seq(q, args...));
     }
 
 
     template<typename P, typename Q>
-    decltype(auto) pipe(P p, Q q)
+    inline decltype(auto) pipe(P p, Q q)
     {
         return [=](std::string inp) {
             const auto a = parse(p, inp);
@@ -153,7 +139,7 @@ namespace lparser
 
     /* PARSERs */
 
-    parser_t<char> item(std::string inp)
+    inline parser_t<char> item(std::string inp)
     {
         if (inp.empty())
             return empty<char>();
@@ -170,7 +156,7 @@ namespace lparser
 
 
     template<typename F>
-    decltype(auto) sat(F f)
+    inline decltype(auto) sat(F f)
     {
         return [=](std::string inp) {
             const auto x = item(inp);
@@ -181,37 +167,37 @@ namespace lparser
         };
     }
 
-    decltype(auto) char_eq(char x)
+    inline decltype(auto) char_eq(char x)
     {
         return sat([x](char ch) { return x == ch; });
     }
 
-    decltype(auto) digit(std::string inp)
+    inline decltype(auto) digit(std::string inp)
     {
         return parse(sat([](char c){ return isdigit(c); }), inp);
     }
 
-    decltype(auto) lower(std::string inp)
+    inline decltype(auto) lower(std::string inp)
     {
         return parse(sat([](char c){ return islower(c); }), inp);
     }
 
-    decltype(auto) upper(std::string inp)
+    inline decltype(auto) upper(std::string inp)
     {
         return parse(sat([](char c){ return isupper(c); }), inp);
     }
 
-    decltype(auto) letter(std::string inp)
+    inline decltype(auto) letter(std::string inp)
     {
         return parse(sat([](char c){ return isalpha(c); }), inp);
     }
 
-    decltype(auto) alphanum(std::string inp)
+    inline decltype(auto) alphanum(std::string inp)
     {
         return parse(sat([](char c){ return isalnum(c); }), inp);
     }
 
-    decltype(auto) string_eq(std::string x)
+    inline decltype(auto) string_eq(std::string x)
     {
         return [=](std::string inp) {
             const auto pos = inp.find(x);
@@ -228,7 +214,7 @@ namespace lparser
 
 
     template<typename P>
-    decltype(auto) many(P p)
+    inline decltype(auto) many(P p)
     {
         return [=](std::string inp) {
             using val_t = typename decltype(parse(p, ""))::value_t;
@@ -253,7 +239,7 @@ namespace lparser
 
 
     template<typename P>
-    decltype(auto) some(P p)
+    inline decltype(auto) some(P p)
     {
         return [=](std::string inp) {
             auto a = parse(seq(p, many(p)), inp);
@@ -274,7 +260,7 @@ namespace lparser
     }
 
 
-    parser_t<std::string> ident(std::string inp)
+    inline parser_t<std::string> ident(std::string inp)
     {
         return parse(
                 parser_bind(
@@ -290,7 +276,7 @@ namespace lparser
     }
 
 
-    decltype(auto) space(std::string inp)
+    inline decltype(auto) space(std::string inp)
     {
         return parse(
                 parser_bind(
@@ -305,7 +291,7 @@ namespace lparser
 
 
     template<typename P>
-    decltype(auto) token(P p)
+    inline decltype(auto) token(P p)
     {
         return [=](std::string inp) {
             using p_t = decltype(parse(p, inp));
@@ -331,7 +317,7 @@ namespace lparser
     }
 
 
-    parser_t<long> nat(std::string inp)
+    inline parser_t<long> nat(std::string inp)
     {
         const auto r = parse(some(digit), inp);
         if (r.is_empty())
@@ -349,7 +335,7 @@ namespace lparser
     }
 
 
-    decltype(auto) intg(std::string inp)
+    inline decltype(auto) intg(std::string inp)
     {
         return parse(pipe(
                 nat,
@@ -360,22 +346,22 @@ namespace lparser
         ), inp);
     }
 
-    decltype(auto) integer(std::string inp)
+    inline decltype(auto) integer(std::string inp)
     {
         return parse(token(intg), inp);
     }
 
-    decltype(auto) natural(std::string inp)
+    inline decltype(auto) natural(std::string inp)
     {
         return parse(token(nat), inp);
     }
 
-    decltype(auto) string(std::string inp)
+    inline decltype(auto) string(std::string inp)
     {
         return parse(token(seq(letter, many(alphanum))), inp);
     }
 
-    decltype(auto) symbol(std::string x)
+    inline decltype(auto) symbol(std::string x)
     {
         return [=](std::string inp) {
             return parse(token(string_eq(x)), inp);
