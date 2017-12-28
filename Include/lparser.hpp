@@ -1,5 +1,6 @@
 //
 // Created by meox on 15/01/17.
+// Inspired to: http://www.cs.nott.ac.uk/~pszgmh/monparsing.pdf
 //
 
 #ifndef PARSER_LPARSER_H_H
@@ -9,6 +10,7 @@
 #include <tuple>
 #include <algorithm>
 #include <numeric>
+#include <cmath>
 #include "omega.hpp"
 
 
@@ -26,7 +28,7 @@ namespace lparser
             empty = true;
         }
 
-        parser_t(T a, std::string r = "")
+        explicit parser_t(T a, std::string r = "")
         : remain(r)
         {
             first = std::make_unique<T>(std::move(a));
@@ -99,7 +101,7 @@ namespace lparser
     }
 
     // bind is the fmap but I'll try to rewrite it from scratch following
-    // https://www.google.it/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=0ahUKEwiCrPvj8anYAhVQzqQKHUP9DrsQFggoMAA&url=http%3A%2F%2Fwww.cs.nott.ac.uk%2F~pszgmh%2Fmonparsing.pdf&usg=AOvVaw2FI6n5E7Y-BVTLTya889cy
+    // http://www.cs.nott.ac.uk/~pszgmh/monparsing.pdf
 
     template<typename P, typename F>
     decltype(auto) parser_bind(P p, F f)
@@ -262,7 +264,8 @@ namespace lparser
             {
                 VT v;
                 v.push_back(std::get<0>(a.get()));
-                for (auto& e : std::get<1>(a.get()))
+                auto rest = std::get<1>(a.get());
+                for (auto e : rest)
                     v.push_back(e);
                 return parser_t<VT>(v, a.remain);
             }
@@ -325,11 +328,12 @@ namespace lparser
         if (r.is_empty())
             return empty<long>();
 
-        long n{}, s = r.get().size();
-        for(char x : r.get())
+        auto v = r.get();
+        long n{}, s = v.size() - 1;
+        for(unsigned char x : v)
         {
-            auto d = (int)(x - '0');
-            n += (10 << (s--)) * d;
+            const auto d = (unsigned int)(x - '0');
+            n += std::pow(10, s--) * d;
         }
 
         return parser_t<long>{n, r.remain};
