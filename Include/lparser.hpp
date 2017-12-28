@@ -136,6 +136,11 @@ namespace lparser
         };
     };
 
+    template<typename P, typename Q, typename ...Args>
+    inline decltype(auto) pipe(P p, Q q, Args ...args)
+    {
+        return pipe(p, pipe(q, args...));
+    }
 
     /* PARSERs */
 

@@ -39,6 +39,33 @@ namespace lparser
         };
     }
 
+    template <typename T>
+    inline decltype(auto) params(T parser)
+    {
+        using RT = typename decltype(parse(parser, ""))::value_t;
+
+        return [=](std::string inp){
+            std::vector<RT> vs;
+            auto extract = [&vs](RT x) {
+                vs.push_back(x);
+                return pure(x);
+            };
+
+            const auto r = parse(
+                    seq(
+                            parser_bind(parser, extract),
+                            many(seq(symbol(","), parser_bind(parser, extract)))
+                    ),
+                    inp
+            );
+
+            if (r.is_empty())
+                return empty<std::vector<RT>>();
+            else
+                return parser_t<std::vector<RT>>{vs, r.remain};
+        };
+    }
+
     inline decltype(auto) nats(std::string inp)
     {
         return parse(lists(natural), inp);
