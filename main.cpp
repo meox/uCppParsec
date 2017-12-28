@@ -18,7 +18,6 @@
 using namespace lparser;
 
 
-
 int main()
 {
     std::cout << parse(many(space), "xyz") << std::endl;
