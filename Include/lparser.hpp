@@ -100,8 +100,6 @@ namespace lparser
         };
     }
 
-    // bind is the fmap but I'll try to rewrite it from scratch following
-    // http://www.cs.nott.ac.uk/~pszgmh/monparsing.pdf
 
     template<typename P, typename F>
     decltype(auto) parser_bind(P p, F f)
@@ -243,7 +241,10 @@ namespace lparser
                     break;
 
                 acc.push_back(a.get());
-                inp = a.remain;
+                if (inp == a.remain)
+                    break;
+                else
+                    inp = a.remain;
             }
 
             return parser_t<std::vector<val_t>>{acc, inp};
@@ -291,7 +292,15 @@ namespace lparser
 
     decltype(auto) space(std::string inp)
     {
-        return parse(many(sat([](char c) { return isspace(c); })), inp);
+        return parse(
+                parser_bind(
+                        many(sat([](char c) { return isspace(c); })),
+                        [](auto x) {
+                            return pure(std::string(x.size(), ' '));
+                        }
+                ),
+                inp
+        );
     }
 
 

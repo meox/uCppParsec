@@ -110,7 +110,7 @@ decltype(auto) three_item(std::string inp)
 
 int main()
 {
-    //std::cout << parse(many(space), "xyz") << std::endl;
+    std::cout << parse(many(space), "xyz") << std::endl;
 
     std::cout << parse(item, "") << std::endl;
     std::cout << parse(item, "3+5") << std::endl;
@@ -141,7 +141,7 @@ int main()
 
     std::cout << "intg " << parse(intg, "1235") << std::endl;
     std::cout << "intg " << parse(intg, "-1235   xxx") << std::endl;
-/*    std::cout << "integer " << parse(integer, "  -107     95") << std::endl;
+    std::cout << "integer " << parse(integer, "  -107     95") << std::endl;
 
     std::cout << "symbol " << parse(symbol("A"), " [ x ] ") << std::endl;
     std::cout << "symbol " << parse(symbol("x"), " x = 123 ") << std::endl;
@@ -150,7 +150,7 @@ int main()
 
     std::cout << "nats " << parse(nats, "[5, 8, 1982, 3 ]") << std::endl;
 
-    const std::string expr_s = "((5  * 7) + (31 - 9) + 21);finish!";
+    /*const std::string expr_s = "((5  * 7) + (31 - 9) + 21);finish!";
     const auto b_expr = parse(expr, expr_s);
     if (b_expr.is_empty())
     {
@@ -163,5 +163,6 @@ int main()
                   << ", not parsed: " << b_expr.remain
                   << std::endl;
     }*/
+
     return 0;
 }

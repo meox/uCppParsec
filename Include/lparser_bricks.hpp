@@ -7,7 +7,7 @@
 
 #include "lparser.hpp"
 
-/*
+
 namespace lparser
 {
     template <typename T>
@@ -19,14 +19,14 @@ namespace lparser
             std::vector<RT> vs;
             auto extract = [&vs](RT x) {
                 vs.push_back(x);
-                return x;
+                return pure(x);
             };
 
             const auto r = parse(
                     seq(
                             symbol("["),
-                            fmap(extract, parser),
-                            many(seq(symbol(","), fmap(extract, parser))),
+                            parser_bind(parser, extract),
+                            many(seq(symbol(","), parser_bind(parser, extract))),
                             symbol("]")
                     ),
                     inp
@@ -53,15 +53,14 @@ namespace lparser
 
     decltype(auto) assign(std::string inp)
     {
-        std::string name;
-        std::string value;
+        std::string name, value;
 
         const auto r = parse(seq(
-                fmap([&](std::string x){name = x; return x;}, ident),
+                parser_bind(ident, [&](std::string x){name = x; return pure(x);}),
                 space,
                 char_eq('='),
                 space,
-                fmap([&](std::string x){value = x; return x;}, ident)
+                parser_bind(ident, [&](std::string x){value = x; return pure(x);})
         ), inp);
 
         if (r.is_empty())
@@ -74,5 +73,5 @@ namespace lparser
         }
     }
 }
-*/
+
 #endif //PARSER_LPARSER_BRICKS_HPP_H
