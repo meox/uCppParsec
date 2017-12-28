@@ -11,7 +11,7 @@
 namespace lparser
 {
     template <typename T>
-    decltype(auto) lists(T parser)
+    inline decltype(auto) lists(T parser)
     {
         using RT = typename decltype(parse(parser, ""))::value_t;
 
@@ -19,14 +19,14 @@ namespace lparser
             std::vector<RT> vs;
             auto extract = [&vs](RT x) {
                 vs.push_back(x);
-                return x;
+                return pure(x);
             };
 
             const auto r = parse(
                     seq(
                             symbol("["),
-                            fmap(extract, parser),
-                            many(seq(symbol(","), fmap(extract, parser))),
+                            parser_bind(parser, extract),
+                            many(seq(symbol(","), parser_bind(parser, extract))),
                             symbol("]")
                     ),
                     inp
@@ -39,29 +39,28 @@ namespace lparser
         };
     }
 
-    decltype(auto) nats(std::string inp)
+    inline decltype(auto) nats(std::string inp)
     {
         return parse(lists(natural), inp);
     }
 
 
-    decltype(auto) strings(std::string inp)
+    inline decltype(auto) strings(std::string inp)
     {
         return parse(lists(alphanum), inp);
     }
 
 
-    decltype(auto) assign(std::string inp)
+    inline decltype(auto) assign(std::string inp)
     {
-        std::string name;
-        std::string value;
+        std::string name, value;
 
         const auto r = parse(seq(
-                fmap([&](std::string x){name = x; return x;}, ident),
+                parser_bind(ident, [&](std::string x){name = x; return pure(x);}),
                 space,
                 char_eq('='),
                 space,
-                fmap([&](std::string x){value = x; return x;}, ident)
+                parser_bind(ident, [&](std::string x){value = x; return pure(x);})
         ), inp);
 
         if (r.is_empty())
