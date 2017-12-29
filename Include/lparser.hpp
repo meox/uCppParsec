@@ -66,6 +66,14 @@ namespace lparser
     parser_t<T> empty() { return parser_t<T>{}; }
 
     template<typename T>
+    parser_t<T> empty(const std::string& remain)
+    {
+        auto p = parser_t<T>{};
+        p.remain = remain;
+        return p;
+    }
+
+    template<typename T>
     parser_t<T> empty_fn(std::string) { return parser_t<T>{}; }
 
     template<typename Parser>
@@ -95,7 +103,7 @@ namespace lparser
             using R_T = typename decltype(parse(f(a.get()), a.remain))::value_t;
 
             if (a.is_empty())
-                return empty<R_T>();
+                return empty<R_T>(a.remain);
             return parse(f(a.get()), a.remain);
         };
     }
@@ -168,7 +176,7 @@ namespace lparser
             if (!x.is_empty() && f(x.get()))
                 return x;
             else
-                return empty<decltype(x.get())>();
+                return empty<decltype(x.get())>(x.remain);
         };
     }
 
@@ -251,7 +259,7 @@ namespace lparser
             using VT = std::remove_reference_t<decltype(std::get<1>(a.get()))>;
 
             if (a.is_empty())
-                return empty<VT>();
+                return empty<VT>(a.remain);
             else
             {
                 VT v;
@@ -269,7 +277,7 @@ namespace lparser
     {
         return parse(
                 parser_bind(
-                        seq(lower, many(alphanum)),
+                        seq(lower, many(pipe(alphanum, sat([](char c) { return c == '_'; })))),
                         [](auto x) {
                             const auto& v_rest = std::get<1>(x);
                             std::string rest = std::accumulate(std::begin(v_rest), std::end(v_rest), std::string{}, [](auto c, auto acc) { return c + acc; });
@@ -315,7 +323,7 @@ namespace lparser
             );
 
             if (r.is_empty())
-                return empty<value_t>();
+                return empty<value_t>(r.remain);
             else
                 return parser_t<value_t>{value, r.remain};
         };
@@ -326,7 +334,7 @@ namespace lparser
     {
         const auto r = parse(some(digit), inp);
         if (r.is_empty())
-            return empty<long>();
+            return empty<long>(r.remain);
 
         auto v = r.get();
         long n{}, s = v.size() - 1;

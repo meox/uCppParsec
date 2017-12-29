@@ -54,13 +54,13 @@ namespace lparser
             const auto r = parse(
                     seq(
                             parser_bind(parser, extract),
-                            many(seq(symbol(","), parser_bind(parser, extract)))
+                            many(seq(char_eq(','), parser_bind(parser, extract)))
                     ),
                     inp
             );
 
             if (r.is_empty())
-                return empty<std::vector<RT>>();
+                return empty<std::vector<RT>>(r.remain);
             else
                 return parser_t<std::vector<RT>>{vs, r.remain};
         };

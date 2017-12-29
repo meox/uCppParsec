@@ -53,17 +53,16 @@ namespace kpml
                 seq(
                         string_eq("fn"),
                         space,
-                        symbol("("),
+                        char_eq('('),
                         space,
-                        params,
+                        params(ident),
                         space,
-                        symbol(")"),
+                        char_eq(')'),
                         space,
                         seq_statements
                 ),
                 inp);
     }
-
 
 }
 

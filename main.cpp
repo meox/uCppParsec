@@ -62,11 +62,20 @@ int main()
 
     std::cout << "nats " << parse(nats, "[5, 8, 1982, 3 ]") << std::endl;
 
-    const std::string expr_s = "((5  * 7) + (31 - 9) + 21);finish!";
+    const std::string fp_body = "myfun(x, y, 5+ 4)";
+    const auto fp = parse(kpml::function_call, fp_body);
+    std::cout << fp_body << ": ";
+    show_statement(fp.get());
+    std::cout << std::endl;
+
+    const std::string expr_s = "((5  * 7) + myfun(x) * (31 - 9) + 21);finish!";
+    //const std::string expr_s = "myfun(x) + (9 + 1)";
     const auto b_expr = parse(kpml::expr, expr_s);
     if (b_expr.is_empty())
     {
-        std::cout << "invalid expr: " << expr_s << std::endl;
+        std::cout << "invalid expr: " << expr_s
+                  << ", remain: " << b_expr.remain
+                  << std::endl;
     }
     else
     {
