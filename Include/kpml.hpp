@@ -65,7 +65,7 @@ namespace kpml
         bool leaf{false};
     };
 
-    
+
     parser_t<statement_t> expr(std::string inp);
     parser_t<statement_t> function_call(std::string inp);
 
@@ -213,14 +213,76 @@ namespace kpml
                     space,
                     char_eq('('),
                     space,
-                    parser_bind(params(expr), [&](std::vector<statement_t> sts) {
-                        for (auto& x : sts)
-                            stm.operands.push_back(std::move(x));
+                    parser_bind(params(expr), [&](const std::vector<statement_t> xs) {
+                        for (const auto& x : xs)
+                            stm.operands.push_back(x);
                         return pure(1);
                     }),
                     space,
                     char_eq(')'),
                     space
+                ),
+                inp
+        );
+
+        if (r.is_empty())
+            return empty<statement_t>(r.remain);
+        else
+            return parser_t<statement_t>(stm, r.remain);
+    }
+
+
+    inline parser_t<statement_t> function_body(std::string inp)
+    {
+        statement_t stm;
+
+        auto r = parse(
+                seq(
+                    parser_bind(expr, [&](statement_t s){
+                        stm.op = "seq";
+                        stm.operands.push_back(s);
+                        return pure(1);
+                    }),
+                    many(seq(symbol(";"), parser_bind(expr, [&](const statement_t& x){
+                        stm.operands.push_back(x);
+                        return pure(1);
+                    })))
+                ),
+                inp
+        );
+
+        if (r.is_empty())
+            return empty<statement_t>(r.remain);
+        else
+            return parser_t<statement_t>(stm, r.remain);
+    }
+
+    inline parser_t<statement_t> function_def(std::string inp)
+    {
+        statement_t stm;
+
+        auto r = parse(
+                seq(
+                    space,
+                    string_eq("def"),
+                    space1,
+                    parser_bind(ident, [&stm](std::string function_name){
+                        stm.op = "def";
+                        stm.operands.push_back(function_name);
+                        return pure(1);
+                    }),
+                    space,
+                    char_eq('('),
+                    space,
+                    parser_bind(params(ident), [&](const std::vector<std::string>& xs) {
+                        for (const auto& x : xs)
+                            stm.operands.push_back(x);
+                        return pure(1);
+                    }),
+                    symbol(")"),
+                    symbol("{"),
+                    function_body,
+                    symbol("}")
                 ),
                 inp
         );

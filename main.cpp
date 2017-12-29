@@ -69,7 +69,6 @@ int main()
     std::cout << std::endl;
 
     const std::string expr_s = "((5  * 7) + myfun(x) * (31 - 9) + 21);finish!";
-    //const std::string expr_s = "myfun(x) + (9 + 1)";
     const auto b_expr = parse(kpml::expr, expr_s);
     if (b_expr.is_empty())
     {
@@ -82,6 +81,22 @@ int main()
         std::cout << "expr: <" << expr_s << "> = ";
         show_statement(*b_expr.first);
         std::cout << ", not parsed: " << b_expr.remain
+                  << std::endl;
+    }
+
+    const std::string fun_def = "def my_fun(x, y) { x + 1;} ;finish!";
+    const auto b_fun_def = parse(kpml::function_def, fun_def);
+    if (b_fun_def.is_empty())
+    {
+        std::cout << "invalid expr: " << fun_def
+                  << ", remain: " << b_fun_def.remain
+                  << std::endl;
+    }
+    else
+    {
+        std::cout << "expr: <" << fun_def << "> = ";
+        show_statement(*b_fun_def.first);
+        std::cout << ", not parsed: " << b_fun_def.remain
                   << std::endl;
     }
 

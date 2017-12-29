@@ -302,6 +302,17 @@ namespace lparser
         );
     }
 
+    inline decltype(auto) space1(std::string inp)
+    {
+        return parse(
+                seq(
+                    sat([](char c) { return isspace(c); }),
+                    space
+                ),
+                inp
+        );
+    }
+
 
     template<typename P>
     inline decltype(auto) token(P p)
@@ -377,7 +388,7 @@ namespace lparser
     inline decltype(auto) symbol(std::string x)
     {
         return [=](std::string inp) {
-            return parse(token(string_eq(x)), inp);
+            return parse(seq(space, string_eq(x), space), inp);
         };
     }
 }

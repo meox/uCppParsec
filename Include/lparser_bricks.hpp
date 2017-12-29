@@ -46,15 +46,15 @@ namespace lparser
 
         return [=](std::string inp){
             std::vector<RT> vs;
-            auto extract = [&vs](RT x) {
+            auto extract = [&vs](const RT& x) {
                 vs.push_back(x);
-                return pure(x);
+                return pure(1);
             };
 
             const auto r = parse(
                     seq(
-                            parser_bind(parser, extract),
-                            many(seq(char_eq(','), parser_bind(parser, extract)))
+                        parser_bind(parser, extract),
+                        many(seq(symbol(","), parser_bind(parser, extract)))
                     ),
                     inp
             );
