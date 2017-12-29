@@ -68,7 +68,7 @@ namespace kpml
     parser_t<statement_t> expr(std::string inp);
     parser_t<statement_t> function_call(std::string inp);
 
-    parser_t<statement_t> factor(std::string inp)
+    inline parser_t<statement_t> factor(std::string inp)
     {
         statement_t a{};
         const auto r = parse(
@@ -112,7 +112,7 @@ namespace kpml
     }
 
 
-    parser_t<statement_t> term(std::string inp)
+    inline parser_t<statement_t> term(std::string inp)
     {
         statement_t v;
 
@@ -154,7 +154,7 @@ namespace kpml
     }
 
 
-    parser_t<statement_t> expr(std::string inp)
+    inline parser_t<statement_t> expr(std::string inp)
     {
         statement_t v;
 

@@ -9,7 +9,6 @@
 #include "lparser_bricks.hpp"
 
 
-// (fn(x) { x + 1 })(1)
 
 namespace kpml
 {
