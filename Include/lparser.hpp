@@ -214,8 +214,8 @@ namespace lparser
     {
         return [=](std::string inp) {
             const auto pos = inp.find(x);
-            if (pos == std::string::npos)
-                return empty<std::string>();
+            if (pos != 0)
+                return empty<std::string>(inp);
 
             const auto l = x.size();
             return parser_t<std::string>{
@@ -388,7 +388,19 @@ namespace lparser
     inline decltype(auto) symbol(std::string x)
     {
         return [=](std::string inp) {
-            return parse(seq(space, string_eq(x), space), inp);
+            std::string s;
+            auto r = parse(
+                    parser_bind(seq(space, string_eq(x), space), [&s](auto x){
+                        s = std::get<1>(x);
+                        return pure(1);
+                    }),
+                    inp
+            );
+
+            if(r.is_empty())
+                return empty<std::string>(r.remain);
+            else
+                return parser_t<std::string>(s, r.remain);
         };
     }
 }

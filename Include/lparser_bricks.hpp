@@ -54,7 +54,7 @@ namespace lparser
             const auto r = parse(
                     seq(
                         parser_bind(parser, extract),
-                        many(seq(symbol(","), parser_bind(parser, extract)))
+                        many(seq(space, char_eq(','), space, parser_bind(parser, extract)))
                     ),
                     inp
             );

@@ -239,14 +239,15 @@ namespace kpml
         auto r = parse(
                 seq(
                     parser_bind(expr, [&](statement_t s){
-                        stm.op = "seq";
+                        stm.op = "begin";
                         stm.operands.push_back(s);
                         return pure(1);
                     }),
-                    many(seq(symbol(";"), parser_bind(expr, [&](const statement_t& x){
-                        stm.operands.push_back(x);
+                    parser_bind(many(seq(symbol(";"), expr)), [&](const auto& xs) {
+                        for(const auto& x: xs)
+                            stm.operands.push_back(std::get<1>(x));
                         return pure(1);
-                    })))
+                    })
                 ),
                 inp
         );
@@ -257,31 +258,34 @@ namespace kpml
             return parser_t<statement_t>(stm, r.remain);
     }
 
+
     inline parser_t<statement_t> function_def(std::string inp)
     {
         statement_t stm;
 
         auto r = parse(
                 seq(
-                    space,
-                    string_eq("def"),
-                    space1,
+                    symbol("def"),
                     parser_bind(ident, [&stm](std::string function_name){
                         stm.op = "def";
                         stm.operands.push_back(function_name);
                         return pure(1);
                     }),
-                    space,
-                    char_eq('('),
-                    space,
+                    symbol("("),
                     parser_bind(params(ident), [&](const std::vector<std::string>& xs) {
+                        statement_t parameters;
+                        parameters.op = "parameters";
                         for (const auto& x : xs)
-                            stm.operands.push_back(x);
+                            parameters.operands.push_back(x);
+                        stm.operands.push_back(parameters);
                         return pure(1);
                     }),
                     symbol(")"),
                     symbol("{"),
-                    function_body,
+                    parser_bind(function_body, [&](const statement_t& s){
+                        stm.operands.push_back(s);
+                        return pure(1);
+                    }),
                     symbol("}")
                 ),
                 inp
