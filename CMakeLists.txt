@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(TARGET_NAME uparsec)
 
 set(SOURCE_FILES main.cpp
-        Include/statement.hpp
+        Include/kpml.hpp
         Include/lparser_bricks.hpp
         Include/lparser.hpp
         Include/omega.hpp)
