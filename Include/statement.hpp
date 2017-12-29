@@ -12,12 +12,49 @@ namespace kpml
 
     struct symbol_t { std::string name; };
 
+    struct Render : boost::static_visitor<void>
+    {
+        Render(std::ostream& out) : _out(out) {}
+
+        template <typename T>
+        void operator()(T && v) const
+        {
+            _out << std::forward<T>(v);
+        }
+
+        std::ostream& _out;
+    };
+
     struct statement_t
     {
-        std::string op;
+        statement_t() = default;
+        statement_t(const statement_t& rhs)
+        {
+            op = rhs.op;
+            operands = rhs.operands;
+            raw_data = rhs.raw_data;
+            leaf = rhs.leaf;
+        }
+
+        std::string op{"?"};
         std::vector<statement_t> operands;
+
+        template <typename T>
+        void set_raw(T d)
+        {
+            leaf = true;
+            raw_data = d;
+        }
+
+        void show_leaf(std::ostream& out) const
+        {
+            boost::apply_visitor(Render(out), raw_data);
+        }
+
+        bool is_leaf() const { return leaf; }
+    private:
         boost::variant<uint64_t, std::string> raw_data;
-        bool is_leaf{false};
+        bool leaf{false};
     };
 
     parser_t<statement_t> expr(std::string inp);
@@ -42,7 +79,7 @@ namespace kpml
                                 ), [](auto) { return pure(1); }
                         ),
                         parser_bind(nat, [&](long s) {
-                            a = s;
+                            a.set_raw(s);
                             return pure(1);
                         })
                 ),
@@ -58,32 +95,31 @@ namespace kpml
 
     parser_t<statement_t> term(std::string inp)
     {
-        char op;
-        long a{}, b{};
+        statement_t v;
 
         const auto r = parse(
                 pipe(
                         parser_bind(
                                 seq(
                                         space,
-                                        parser_bind(factor, [&](long s) {
-                                            a = s;
+                                        parser_bind(factor, [&](statement_t s) {
+                                            v.operands.push_back(s);
                                             return pure(1);
                                         }),
                                         space,
                                         parser_bind(pipe(char_eq('*'), char_eq('/')), [&](char c) {
-                                            op = c;
+                                            v.op = c;
                                             return pure(1);
                                         }),
                                         space,
-                                        parser_bind(term, [&](long s) {
-                                            b = s;
+                                        parser_bind(term, [&](statement_t s) {
+                                            v.operands.push_back(s);
                                             return pure(1);
                                         }),
                                         space
                                 ), [](auto x) { return pure(1); }),
-                        parser_bind(factor, [&](long s) {
-                            a = s;
+                        parser_bind(factor, [&](statement_t s) {
+                            v = s;
                             return pure(1);
                         })
                 ),
@@ -93,38 +129,37 @@ namespace kpml
         if (r.is_empty())
             return empty<statement_t>();
         else
-            return parser_t<statement_t>((op == '*' ? a * b : a / b), r.remain);
+            return parser_t<statement_t>(v, r.remain);
     }
 
 
     parser_t<statement_t> expr(std::string inp)
     {
-        std::string op;
-        statement_t a{}, b{};
+        statement_t v;
 
         const auto r = parse(
                 pipe(
                         parser_bind(
                                 seq(
                                         space,
-                                        parser_bind(term, [&](long s) {
-                                            a = s;
+                                        parser_bind(term, [&](statement_t s) {
+                                            v.operands.push_back(s);
                                             return pure(1);
                                         }),
                                         space,
                                         parser_bind(pipe(char_eq('+'), char_eq('-')), [&](char c) {
-                                            op = c;
+                                            v.op = c;
                                             return pure(1);
                                         }),
                                         space,
-                                        parser_bind(expr, [&](long s) {
-                                            b = s;
+                                        parser_bind(expr, [&](statement_t s) {
+                                            v.operands.push_back(s);
                                             return pure(1);
                                         }),
                                         space
                                 ), [](auto) { return pure(1); }),
-                        parser_bind(term, [&](long s_a) {
-                            a = s_a;
+                        parser_bind(term, [&](statement_t s) {
+                            v = s;
                             return pure(1);
                         })
                 ),
@@ -134,6 +169,6 @@ namespace kpml
         if (r.is_empty())
             return empty<statement_t>();
         else
-            return parser_t<statement_t>((op == '+' ? a + b : a - b), r.remain);
+            return parser_t<statement_t>(v, r.remain);
     }
 }

@@ -18,6 +18,7 @@
 
 using namespace lparser;
 
+void show_statement(const kpml::statement_t& s);
 
 int main()
 {
@@ -62,19 +63,48 @@ int main()
     std::cout << "nats " << parse(nats, "[5, 8, 1982, 3 ]") << std::endl;
 
     const std::string expr_s = "((5  * 7) + (31 - 9) + 21);finish!";
-    const auto b_expr = parse(expr, expr_s);
+    const auto b_expr = parse(kpml::expr, expr_s);
     if (b_expr.is_empty())
     {
         std::cout << "invalid expr: " << expr_s << std::endl;
     }
     else
     {
-        std::cout << "expr: <" << expr_s << "> = "
-                  << *b_expr.first
-                  << ", not parsed: " << b_expr.remain
-                  << ", correct value = " << ((5  * 7) + (31 - 9) + 21)
+        std::cout << "expr: <" << expr_s << "> = ";
+        show_statement(*b_expr.first);
+        std::cout << ", not parsed: " << b_expr.remain
                   << std::endl;
     }
 
     return 0;
+}
+
+
+void show_statement(const kpml::statement_t& s)
+{
+    if (s.is_leaf())
+    {
+        s.show_leaf(std::cout);
+    }
+    else
+    {
+        std::cout << R"({ "op": ")" << s.op << "\",";
+        if (!s.operands.empty())
+        {
+            std::cout << " \"operands\": [";
+            bool f{false};
+            for(const auto& e : s.operands)
+            {
+                if (f)
+                    std::cout << ", ";
+                else
+                    f = true;
+
+                show_statement(e);
+            }
+            std::cout << "]";
+        }
+
+        std::cout << "}";
+    }
 }
