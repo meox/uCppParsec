@@ -129,8 +129,13 @@ namespace kpml
                                     return pure(1);
                                 }),
                                 space,
-                                parser_bind(pipe(char_eq('*'), char_eq('/')), [&](char c) {
-                                    v.op = c;
+                                parser_bind(pipe(
+                                        string_eq("*"), string_eq("/"),
+                                        string_eq(">"), string_eq("<"),
+                                        string_eq(">="), string_eq("<="),
+                                        string_eq("==")
+                                ), [&](const std::string& op) {
+                                    v.op = op;
                                     return pure(1);
                                 }),
                                 space,
@@ -231,6 +236,59 @@ namespace kpml
             return parser_t<statement_t>(stm, r.remain);
     }
 
+    inline parser_t<statement_t> statement(std::string inp);
+
+    inline parser_t<statement_t> if_else(std::string inp)
+    {
+        statement_t stm;
+        stm.op = "if";
+
+        auto r = parse(
+                seq(
+                    symbol("if"),
+                    symbol("("),
+                    parser_bind(expr, [&](const statement_t& s){
+                        stm.operands.push_back(s);
+                        return pure(1);
+                    }),
+                    symbol(")"),
+                    symbol("{"),
+                    parser_bind(statement, [&](const statement_t& s){
+                        stm.operands.push_back(s);
+                        return pure(1);
+                    }),
+                    symbol("}"),
+                    symbol("else"),
+                    symbol("{"),
+                    parser_bind(statement, [&](const statement_t& s) {
+                        stm.operands.push_back(s);
+                        return pure(1);
+                    }),
+                    symbol("}")
+                ),
+                inp
+        );
+
+        if (r.is_empty())
+            return empty<statement_t>(r.remain);
+        else
+            return parser_t<statement_t>(stm, r.remain);
+    }
+
+
+    inline parser_t<statement_t> statement(std::string inp)
+    {
+        auto r = parse(
+                seq(space, pipe(if_else, expr), space),
+                inp
+        );
+
+        if (r.is_empty())
+            return empty<statement_t>(r.remain);
+        else
+            return parser_t<statement_t>(std::get<1>(r.get()), r.remain);
+    }
+
 
     inline parser_t<statement_t> function_body(std::string inp)
     {
@@ -238,12 +296,12 @@ namespace kpml
 
         auto r = parse(
                 seq(
-                    parser_bind(expr, [&](statement_t s){
+                    parser_bind(statement, [&](statement_t s){
                         stm.op = "begin";
                         stm.operands.push_back(s);
                         return pure(1);
                     }),
-                    parser_bind(many(seq(symbol(";"), expr)), [&](const auto& xs) {
+                    parser_bind(many(seq(symbol(";"), statement)), [&](const auto& xs) {
                         for(const auto& x: xs)
                             stm.operands.push_back(std::get<1>(x));
                         return pure(1);

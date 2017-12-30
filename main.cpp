@@ -84,7 +84,7 @@ int main()
                   << std::endl;
     }
 
-    const std::string fun_def = "def my_fun(x, y) { x + 1; (y + 1) * 9 } ;finish!";
+    const std::string fun_def = "def my_fun(x, y) { if ((x + 1) > 0) { 5 } else { if (y > 0) {y} else {x} } } ;finish!";
     const auto b_fun_def = parse(kpml::function_def, fun_def);
     if (b_fun_def.is_empty())
     {
