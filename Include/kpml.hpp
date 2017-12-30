@@ -81,7 +81,7 @@ namespace kpml
                                 seq(
                                     char_eq('('),
                                     space,
-                                    parser_bind(expr, [&](statement_t s) {
+                                    parser_bind(expr, [&](const statement_t& s) {
                                         a = s;
                                         return pure(1);
                                     }),
@@ -89,7 +89,7 @@ namespace kpml
                                     char_eq(')')
                                 ), [](auto) { return pure(1); }
                         ),
-                        parser_bind(function_call, [&](statement_t s) {
+                        parser_bind(function_call, [&](const statement_t& s) {
                             a = s;
                             return pure(1);
                         }),
@@ -97,7 +97,7 @@ namespace kpml
                             a.set_raw(s);
                             return pure(1);
                         }),
-                        parser_bind(ident, [&](std::string s) {
+                        parser_bind(ident, [&](const std::string& s) {
                             a.set_raw(s);
                             return pure(1);
                         })
@@ -124,27 +124,26 @@ namespace kpml
                     pipe(
                         parser_bind(
                             seq(
-                                parser_bind(factor, [&](statement_t s) {
+                                parser_bind(factor, [&](const statement_t& s) {
                                     v.operands.push_back(s);
                                     return pure(1);
                                 }),
                                 space,
                                 parser_bind(pipe(
                                         string_eq("*"), string_eq("/"),
-                                        string_eq(">"), string_eq("<"),
-                                        string_eq(">="), string_eq("<="),
-                                        string_eq("==")
+                                        string_eq("in"), string_eq("!"),
+                                        string_eq("&&"), string_eq("||")
                                 ), [&](const std::string& op) {
                                     v.op = op;
                                     return pure(1);
                                 }),
                                 space,
-                                parser_bind(term, [&](statement_t s) {
+                                parser_bind(term, [&](const statement_t& s) {
                                     v.operands.push_back(s);
                                     return pure(1);
                                 })
                             ), [](auto x) { return pure(1); }),
-                        parser_bind(factor, [&](statement_t s) {
+                        parser_bind(factor, [&](const statement_t& s) {
                             v = s;
                             return pure(1);
                         })
@@ -171,22 +170,27 @@ namespace kpml
                     pipe(
                         parser_bind(
                             seq(
-                                parser_bind(term, [&](statement_t s) {
+                                parser_bind(term, [&](const statement_t& s) {
                                     v.operands.push_back(s);
                                     return pure(1);
                                 }),
                                 space,
-                                parser_bind(pipe(char_eq('+'), char_eq('-')), [&](char c) {
-                                    v.op = c;
+                                parser_bind(pipe(
+                                        string_eq("+"), string_eq("-"),
+                                        string_eq(">"), string_eq("<"),
+                                        string_eq(">="), string_eq("<="),
+                                        string_eq("==")
+                                ), [&](const std::string& op) {
+                                    v.op = op;
                                     return pure(1);
                                 }),
                                 space,
-                                parser_bind(expr, [&](statement_t s) {
+                                parser_bind(expr, [&](const statement_t& s) {
                                     v.operands.push_back(s);
                                     return pure(1);
                                 })
                             ), [](auto) { return pure(1); }),
-                        parser_bind(term, [&](statement_t s) {
+                        parser_bind(term, [&](const statement_t& s) {
                             v = s;
                             return pure(1);
                         })
@@ -210,7 +214,7 @@ namespace kpml
         auto r = parse(
                 seq(
                     space,
-                    parser_bind(ident, [&stm](std::string function_name){
+                    parser_bind(ident, [&stm](const std::string& function_name){
                         stm.op = "apply";
                         stm.operands.push_back(function_name);
                         return pure(1);
@@ -296,7 +300,7 @@ namespace kpml
 
         auto r = parse(
                 seq(
-                    parser_bind(statement, [&](statement_t s){
+                    parser_bind(statement, [&](const statement_t& s){
                         stm.op = "begin";
                         stm.operands.push_back(s);
                         return pure(1);
@@ -324,7 +328,7 @@ namespace kpml
         auto r = parse(
                 seq(
                     symbol("def"),
-                    parser_bind(ident, [&stm](std::string function_name){
+                    parser_bind(ident, [&stm](const std::string& function_name){
                         stm.op = "def";
                         stm.operands.push_back(function_name);
                         return pure(1);
