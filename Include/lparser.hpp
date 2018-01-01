@@ -382,7 +382,20 @@ namespace lparser
 
     inline decltype(auto) string(std::string inp)
     {
-        return parse(token(seq(letter, many(alphanum))), inp);
+        return parse(
+                parser_bind(token(seq(char_eq('"'),
+                               parser_bind(many(alphanum), [](const std::vector<char>& vs){
+                                   std::string s;
+                                   s.reserve(vs.size());
+                                   for (auto ch : vs)
+                                       s += ch;
+                                   return pure(s);
+                               }),
+                               char_eq('"'))),
+                            [](const auto& x){
+                                return pure(std::get<1>(x));
+                            }),
+                     inp);
     }
 
     inline decltype(auto) symbol(std::string x)

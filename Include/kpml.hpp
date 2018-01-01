@@ -18,13 +18,19 @@ namespace kpml
 
         void operator()(const uint64_t& v) const
         {
-            _out << v;
+            _out << "{ \"type\": \"number\", \"value\": " << v << " }";
         }
 
         void operator()(const std::string& v) const
         {
-            _out << "\"" << v << "\"";
+            _out << "{ \"type\": \"string\", \"value\": \"" << v << "\" }";
         }
+
+        void operator()(const symbol_t& v) const
+        {
+            _out << "{ \"type\": \"symbol\", \"value\": \"" << v.name << "\" }";
+        }
+
         std::ostream& _out;
     };
 
@@ -39,9 +45,14 @@ namespace kpml
             leaf = rhs.leaf;
         }
 
-        statement_t(const std::string& e)
+        statement_t(const std::string& s)
         {
-            set_raw(e);
+            set_raw(s);
+        }
+
+        statement_t(const symbol_t& s)
+        {
+            set_raw(s);
         }
 
         std::string op{"?"};
@@ -61,7 +72,7 @@ namespace kpml
 
         bool is_leaf() const { return leaf; }
     private:
-        boost::variant<uint64_t, std::string> raw_data;
+        boost::variant<symbol_t, uint64_t, std::string> raw_data;
         bool leaf{false};
     };
 
@@ -93,11 +104,15 @@ namespace kpml
                             a = s;
                             return pure(1);
                         }),
+                        parser_bind(ident, [&](const std::string& s) {
+                            a.set_raw(symbol_t{s});
+                            return pure(1);
+                        }),
                         parser_bind(nat, [&](long s) {
                             a.set_raw(s);
                             return pure(1);
                         }),
-                        parser_bind(ident, [&](const std::string& s) {
+                        parser_bind(string, [&](const std::string& s) {
                             a.set_raw(s);
                             return pure(1);
                         })
@@ -216,7 +231,7 @@ namespace kpml
                     space,
                     parser_bind(ident, [&stm](const std::string& function_name){
                         stm.op = "apply";
-                        stm.operands.push_back(function_name);
+                        stm.operands.push_back(symbol_t{function_name});
                         return pure(1);
                     }),
                     space,
@@ -338,7 +353,7 @@ namespace kpml
                         statement_t parameters;
                         parameters.op = "parameters";
                         for (const auto& x : xs)
-                            parameters.operands.push_back(x);
+                            parameters.operands.push_back(symbol_t{x});
                         stm.operands.push_back(parameters);
                         return pure(1);
                     }),
