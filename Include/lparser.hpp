@@ -20,6 +20,76 @@
 namespace lparser
 {
 
+    struct error_t
+    {
+        //
+        std::string desc;
+    };
+
+
+    template <typename L, typename R>
+    using either = boost::variant<L, R>;
+
+
+    template <typename T>
+    bool is_left(const either<T>& e) noexcept
+    {
+        return e.which() == 0;
+    }
+
+    template <typename T>
+    bool is_right(const either<T>& e) noexcept
+    {
+        return e.which() == 1;
+    }
+
+
+    template <typename T>
+    using element_t = std::pair<either<error_t, T>, std::string>;
+    
+
+    //try to use small vector
+    template <typename T>
+    using result_t = std::vector<element_t>;
+
+
+    template <typename T>
+    bool is_error(const element_t<T>& e) noexcept
+    {
+        return is_left(std::get<0>(e));
+    }
+
+
+    template <typename T>
+    using Parser = std::function<result_t<T>(std::string)>;
+    
+
+    template <typename T>
+    result_t<T> make_result(const T& v, std::string remain = "")
+    {
+        return {{v, std::move(remain)}};
+    }
+
+
+    template <typename T>
+    result_t<T> make_zero()
+    {
+        return {};
+    }
+
+
+    template <typename T>
+    bool is_zero(const result_t<T>& r) noexcept
+    {
+        if (r.empty())
+            return true;
+
+        return std::all_of(std::begin(r), std::end(r), [](const auto& e) {
+            return is_error(e);
+        });
+    }
+
+
     template<typename T>
     struct parser_t
     {
@@ -55,12 +125,19 @@ namespace lparser
         bool is_empty() const { return empty; }
         T get() const { return *first; }
 
+        explicit operator bool() const noexcept
+        {
+            return std::
+        }
+
+        //NB: either<std::string, T>
         std::unique_ptr<T> first;
         std::string remain;
 
     private:
-        bool empty;
+        //bool empty;
     };
+
 
     template<typename T>
     parser_t<T> empty() { return parser_t<T>{}; }
@@ -94,6 +171,23 @@ namespace lparser
         };
     }
 
+
+    template<typename T>
+    inline Parser<T> result(T v)
+    {
+        return [=](std::string inp) {
+            return result_t<T>(v, inp);
+        };
+    }
+
+
+    template<typename T>
+    inline Parser<T> zero()
+    {
+        return [=](std::string inp) {
+            return result_t<T>(v, inp);
+        };
+    }
 
     template<typename P, typename F>
     inline decltype(auto) parser_bind(P p, F f)
